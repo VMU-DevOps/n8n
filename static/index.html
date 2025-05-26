@@ -2,57 +2,37 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <title>Đăng nhập GDT</title>
+  <title>Nhận diện Captcha GDT</title>
   <script>
     async function detectCaptcha() {
       const res = await fetch("/captcha");
       const data = await res.json();
+
       if (data.image) {
         document.getElementById("captchaImg").src = "data:image/png;base64," + data.image;
         document.getElementById("captcha").value = data.captcha_code || "";
         document.getElementById("captcha_code").value = data.captcha_code || "";
       }
+
       if (data.screenshot) {
-        document.getElementById("fullScreenshot").src = "data:image/png;base64," + data.screenshot;
-        document.getElementById("fullScreenshot").style.display = "block";
+        const ss = document.getElementById("fullScreenshot");
+        ss.src = "data:image/png;base64," + data.screenshot;
+        ss.style.display = "block";
       }
-    }
 
-    async function login() {
-      const username = document.getElementById("username").value;
-      const password = document.getElementById("password").value;
-      const captcha = document.getElementById("captcha").value;
-
-      const res = await fetch("/login", {
-        method: "POST",
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ username, password, captcha })
-      });
-
-      const data = await res.json();
-      const result = document.getElementById("result");
-      if (data.status === "success") {
-        result.textContent = "✅ Đăng nhập thành công!";
-        result.style.color = "green";
-      } else {
-        result.textContent = "❌ Đăng nhập thất bại!";
-        result.style.color = "red";
-      }
+      document.getElementById("result").textContent = "✅ Mã captcha nhận diện: " + (data.captcha_code || "Không nhận được");
     }
 
     window.onload = detectCaptcha;
   </script>
 </head>
 <body>
-  <h2>Đăng nhập GDT</h2>
-  <form onsubmit="event.preventDefault(); login();">
-    <input type="text" id="username" placeholder="Tên đăng nhập" /><br/>
-    <input type="password" id="password" placeholder="Mật khẩu" /><br/>
-    <input type="text" id="captcha" placeholder="Nhập mã captcha" /><br/>
+  <h2>Nhận diện Captcha GDT</h2>
+  <form onsubmit="event.preventDefault();">
+    <input type="text" id="captcha" placeholder="Mã captcha (đã nhận dạng)" readonly /><br/>
     <img id="captchaImg" alt="Captcha" /><br/>
     <input type="hidden" id="captcha_code" />
     <button type="button" onclick="detectCaptcha()">📸 Nhận diện Captcha</button><br/><br/>
-    <button type="submit">Đăng nhập</button>
   </form>
   <p id="result"></p>
   <img id="fullScreenshot" style="display:none; max-width:100%; border:1px solid #ccc; margin-top:20px;" />

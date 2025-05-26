@@ -1,8 +1,11 @@
+FROM mcr.microsoft.com/playwright/python:v1.44.0-jammy
 
-FROM mcr.microsoft.com/playwright:v1.43.1-jammy
+RUN apt-get update && apt-get install -y tesseract-ocr
 
-WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+
 COPY . /app
-RUN npm install playwright
+WORKDIR /app
 
-CMD ["node", "login_gdt.js"]
+CMD ["python", "main.py"]

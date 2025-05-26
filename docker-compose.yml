@@ -1,32 +1,8 @@
-services:
-  gdt-bot:
-    build:
-      context: .
-    pull_policy: build
-    container_name: gdt-playwright
-    volumes:
-      - gdt_data:/data
-    stdin_open: true
-    tty: true
+version: '3.8'
 
-  dashboard-viewer:
-    image: python:3.11-slim
-    container_name: gdt-viewer
-    working_dir: /app
-    volumes:
-      - gdt_data:/data
+services:
+  captcha-login:
+    build: .
     ports:
-      - "6800:6800"
-    command: >
-      sh -c "pip install flask && echo '
-        from flask import Flask, send_file
-        import os
-        app = Flask(__name__)
-        @app.route("/")
-        def index():
-          path = "/data/dashboard.html"
-          return send_file(path) if os.path.exists(path) else "No dashboard yet", 404
-        app.run(host="0.0.0.0", port=6800)
-        ' > /app/viewer.py && python /app/viewer.py"
-volumes:
-  gdt_data:
+      - "5000:5000"
+    restart: always

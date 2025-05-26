@@ -1,8 +1,17 @@
 version: '3.8'
-
 services:
   captcha-login:
-    build: .
+    build:
+      context: ./captcha-login
     ports:
       - "15000:5000"
+    depends_on:
+      - ocr-service
+    restart: always
+
+  ocr-service:
+    build:
+      context: ./ocr-service
+    ports:
+      - "16000:6000"
     restart: always

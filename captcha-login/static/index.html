@@ -7,19 +7,15 @@
     async function detectCaptcha() {
       const res = await fetch("/captcha");
       const data = await res.json();
-
       if (data.image) {
         document.getElementById("captchaImg").src = "data:image/png;base64," + data.image;
         document.getElementById("captcha").value = data.captcha_code || "";
         document.getElementById("captcha_code").value = data.captcha_code || "";
       }
-
       if (data.screenshot) {
-        const ss = document.getElementById("fullScreenshot");
-        ss.src = "data:image/png;base64," + data.screenshot;
-        ss.style.display = "block";
+        document.getElementById("fullScreenshot").src = "data:image/png;base64," + data.screenshot;
+        document.getElementById("fullScreenshot").style.display = "block";
       }
-
       document.getElementById("result").textContent = "✅ Mã captcha nhận diện: " + (data.captcha_code || "Không nhận được");
     }
 

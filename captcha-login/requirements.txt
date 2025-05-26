@@ -1,4 +1,4 @@
 flask
 playwright
-pytesseract
+requests
 Pillow

@@ -3,7 +3,9 @@ version: '3.8'
 
 services:
   gdt-bot:
-    build: .
+    build:
+      context: .
+    pull_policy: build
     container_name: gdt-playwright
     volumes:
       - gdt_data:/data

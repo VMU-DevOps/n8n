@@ -1,4 +1,12 @@
-FROM n8nio/n8n:latest
 
-# Cài cheerio và các package liên quan nếu cần
-RUN npm install cheerio
+FROM mcr.microsoft.com/playwright:v1.43.1-jammy
+
+WORKDIR /app
+COPY . /app
+
+RUN apt-get update && \
+    apt-get install -y tesseract-ocr python3-pip && \
+    pip3 install pytesseract pillow && \
+    npm install
+
+CMD ["node", "login_gdt.js"]

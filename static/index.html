@@ -13,6 +13,10 @@
       document.getElementById("captcha_code").value = data.captcha_code || "";
     }
 
+    function autofillCaptcha() {
+      document.getElementById("captcha").value = document.getElementById("captcha_code").value;
+    }
+
     async function login() {
       const username = document.getElementById("username").value;
       const password = document.getElementById("password").value;
@@ -25,7 +29,14 @@
       });
 
       const data = await res.json();
-      alert(data.status === "success" ? "Đăng nhập thành công!" : "Đăng nhập thất bại!");
+      const result = document.getElementById("result");
+      if (data.status === "success") {
+        result.textContent = "✅ Đăng nhập thành công!";
+        result.style.color = "green";
+      } else {
+        result.textContent = "❌ Đăng nhập thất bại!";
+        result.style.color = "red";
+      }
     }
 
     window.onload = loadCaptcha;
@@ -39,7 +50,9 @@
     <label>Mã captcha: <input type="text" id="captcha" /></label><br/>
     <img id="captchaImg" alt="Captcha" /><br/>
     <input type="hidden" id="captcha_code" />
+    <button type="button" onclick="autofillCaptcha()">🔁 Nhận diện Captcha</button><br/><br/>
     <button type="submit">Đăng nhập</button>
   </form>
+  <p id="result"></p>
 </body>
 </html>

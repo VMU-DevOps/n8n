@@ -1,10 +1,9 @@
-from flask import Flask, request, jsonify, send_file, send_from_directory
+from flask import Flask, request, jsonify, send_file
 from playwright.sync_api import sync_playwright
 import pytesseract
 from PIL import Image
 import base64
 import io
-import os
 
 app = Flask(__name__)
 
@@ -17,8 +16,10 @@ def get_captcha():
         page.wait_for_selector("img#captchaImage")  # Cập nhật selector thực tế
         captcha_element = page.query_selector("img#captchaImage")
         captcha_bytes = captcha_element.screenshot()
+
         image = Image.open(io.BytesIO(captcha_bytes))
         code = pytesseract.image_to_string(image).strip()
+
         img_base64 = base64.b64encode(captcha_bytes).decode("utf-8")
         return jsonify({"image": img_base64, "captcha_code": code})
 
@@ -28,6 +29,7 @@ def login():
     username = data["username"]
     password = data["password"]
     captcha = data["captcha"]
+
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         page = browser.new_page()
@@ -41,4 +43,7 @@ def login():
         if "Đăng xuất" in content:
             return jsonify({"status": "success"})
         else:
-            retur
+            return jsonify({"status": "fail", "html": content})
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)

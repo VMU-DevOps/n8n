@@ -7,8 +7,10 @@
     async function loadCaptcha() {
       const res = await fetch("/captcha");
       const data = await res.json();
-      document.getElementById("captchaImg").src = "data:image/png;base64," + data.image;
-      document.getElementById("captcha_code").value = data.captcha_code;
+      if (data.image) {
+        document.getElementById("captchaImg").src = "data:image/png;base64," + data.image;
+      }
+      document.getElementById("captcha_code").value = data.captcha_code || "";
     }
 
     async function login() {

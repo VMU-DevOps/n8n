@@ -15,12 +15,30 @@ def index():
 @app.route("/captcha")
 def get_captcha():
     with sync_playwright() as p:
-        browser = p.chromium.launch()
+        browser = p.chromium.launch(headless=True)
         page = browser.new_page()
-        page.goto("https://hoadondientu.gdt.gov.vn/")
-        page.wait_for_selector("img#captchaImage")
-        captcha_element = page.query_selector("img#captchaImage")
-        captcha_bytes = captcha_element.screenshot()
+        page.goto("https://hoadondientu.gdt.gov.vn/", timeout=60000)
+        page.wait_for_timeout(3000)
+
+        # Step 1: click into body to trigger overlay
+        page.mouse.click(100, 100)
+        page.wait_for_timeout(1000)
+
+        # Step 2: find and click Đăng nhập
+        login_button = page.query_selector("text=Đăng nhập")
+        if login_button:
+            login_button.click()
+        else:
+            return jsonify({"error": "Không tìm thấy nút Đăng nhập"}), 500
+
+        page.wait_for_timeout(3000)
+
+        # Step 3: tìm ảnh captcha theo alt="captcha"
+        captcha_img = page.query_selector("img[alt='captcha']")
+        if not captcha_img:
+            return jsonify({"error": "Không tìm thấy ảnh captcha"}), 500
+
+        captcha_bytes = captcha_img.screenshot()
         image = Image.open(io.BytesIO(captcha_bytes))
         code = pytesseract.image_to_string(image).strip()
         img_base64 = base64.b64encode(captcha_bytes).decode("utf-8")
@@ -36,10 +54,17 @@ def login():
         browser = p.chromium.launch(headless=True)
         page = browser.new_page()
         page.goto("https://hoadondientu.gdt.gov.vn/")
-        page.fill("#username", username)
-        page.fill("#password", password)
-        page.fill("#captcha", captcha)
-        page.click("#submit")
+        page.mouse.click(100, 100)
+        page.wait_for_timeout(1000)
+        login_button = page.query_selector("text=Đăng nhập")
+        if login_button:
+            login_button.click()
+        page.wait_for_timeout(2000)
+
+        page.fill("input[placeholder='Tên đăng nhập']", username)
+        page.fill("input[placeholder='Mật khẩu']", password)
+        page.fill("input[placeholder='Nhập mã captcha']", captcha)
+        page.click("button:has-text('Đăng nhập')")
         page.wait_for_timeout(5000)
         content = page.content()
         if "Đăng xuất" in content:

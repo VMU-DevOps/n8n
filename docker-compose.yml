@@ -1,3 +1,4 @@
+
 version: '3.8'
 
 services:
@@ -19,14 +20,14 @@ services:
       - "6800:6800"
     command: >
       sh -c "pip install flask && echo '
-      from flask import Flask, send_file
-      import os
-      app = Flask(__name__)
-      @app.route(\"/\")
-      def index():
-        path = \"/data/dashboard.html\"
-        return send_file(path) if os.path.exists(path) else \"No dashboard yet\", 404
-      app.run(host=\"0.0.0.0\", port=6800)
-      ' > /app/viewer.py && python /app/viewer.py"
+        from flask import Flask, send_file
+        import os
+        app = Flask(__name__)
+        @app.route("/")
+        def index():
+          path = "/data/dashboard.html"
+          return send_file(path) if os.path.exists(path) else "No dashboard yet", 404
+        app.run(host="0.0.0.0", port=6800)
+        ' > /app/viewer.py && python /app/viewer.py"
 volumes:
   gdt_data:

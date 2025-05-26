@@ -19,30 +19,31 @@ def get_captcha():
         page = browser.new_page()
         page.goto("https://hoadondientu.gdt.gov.vn/", timeout=60000)
         page.wait_for_timeout(3000)
-
-        # Step 1: click into body to trigger overlay
         page.mouse.click(100, 100)
         page.wait_for_timeout(1000)
-
-        # Step 2: find and click Đăng nhập
         login_button = page.query_selector("text=Đăng nhập")
         if login_button:
             login_button.click()
-        else:
-            return jsonify({"error": "Không tìm thấy nút Đăng nhập"}), 500
-
         page.wait_for_timeout(3000)
 
-        # Step 3: tìm ảnh captcha theo alt="captcha"
         captcha_img = page.query_selector("img[alt='captcha']")
         if not captcha_img:
             return jsonify({"error": "Không tìm thấy ảnh captcha"}), 500
 
         captcha_bytes = captcha_img.screenshot()
+        full_bytes = page.screenshot(full_page=True)
+
         image = Image.open(io.BytesIO(captcha_bytes))
         code = pytesseract.image_to_string(image).strip()
+
         img_base64 = base64.b64encode(captcha_bytes).decode("utf-8")
-        return jsonify({"image": img_base64, "captcha_code": code})
+        full_base64 = base64.b64encode(full_bytes).decode("utf-8")
+
+        return jsonify({
+            "image": img_base64,
+            "captcha_code": code,
+            "screenshot": full_base64
+        })
 
 @app.route("/login", methods=["POST"])
 def login():

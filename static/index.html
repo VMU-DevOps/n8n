@@ -4,17 +4,18 @@
   <meta charset="UTF-8" />
   <title>Đăng nhập GDT</title>
   <script>
-    async function loadCaptcha() {
+    async function detectCaptcha() {
       const res = await fetch("/captcha");
       const data = await res.json();
       if (data.image) {
         document.getElementById("captchaImg").src = "data:image/png;base64," + data.image;
+        document.getElementById("captcha").value = data.captcha_code || "";
+        document.getElementById("captcha_code").value = data.captcha_code || "";
       }
-      document.getElementById("captcha_code").value = data.captcha_code || "";
-    }
-
-    function autofillCaptcha() {
-      document.getElementById("captcha").value = document.getElementById("captcha_code").value;
+      if (data.screenshot) {
+        document.getElementById("fullScreenshot").src = "data:image/png;base64," + data.screenshot;
+        document.getElementById("fullScreenshot").style.display = "block";
+      }
     }
 
     async function login() {
@@ -39,20 +40,21 @@
       }
     }
 
-    window.onload = loadCaptcha;
+    window.onload = detectCaptcha;
   </script>
 </head>
 <body>
   <h2>Đăng nhập GDT</h2>
   <form onsubmit="event.preventDefault(); login();">
-    <label>Tên đăng nhập: <input type="text" id="username" /></label><br/>
-    <label>Mật khẩu: <input type="password" id="password" /></label><br/>
-    <label>Mã captcha: <input type="text" id="captcha" /></label><br/>
+    <input type="text" id="username" placeholder="Tên đăng nhập" /><br/>
+    <input type="password" id="password" placeholder="Mật khẩu" /><br/>
+    <input type="text" id="captcha" placeholder="Nhập mã captcha" /><br/>
     <img id="captchaImg" alt="Captcha" /><br/>
     <input type="hidden" id="captcha_code" />
-    <button type="button" onclick="autofillCaptcha()">🔁 Nhận diện Captcha</button><br/><br/>
+    <button type="button" onclick="detectCaptcha()">📸 Nhận diện Captcha</button><br/><br/>
     <button type="submit">Đăng nhập</button>
   </form>
   <p id="result"></p>
+  <img id="fullScreenshot" style="display:none; max-width:100%; border:1px solid #ccc; margin-top:20px;" />
 </body>
 </html>

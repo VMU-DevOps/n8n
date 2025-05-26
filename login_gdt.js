@@ -1,6 +1,5 @@
 
 const { chromium } = require('playwright');
-const { execSync } = require('child_process');
 const readline = require('readline');
 const fs = require('fs');
 
@@ -23,7 +22,6 @@ function ask(question) {
   await page.goto('https://hoadondientu.gdt.gov.vn/');
 
   const iframe = page.frameLocator('iframe[src*="/login"]');
-
   const captchaImg = iframe.locator('#imgCaptcha');
   await captchaImg.screenshot({ path: '/data/captcha.png' });
   console.log("🖼 CAPTCHA đã lưu tại: /data/captcha.png");
@@ -41,7 +39,7 @@ function ask(question) {
 
   const html = await page.content();
   fs.writeFileSync('/data/dashboard.html', html);
-
   console.log("✅ Đã đăng nhập và lưu dashboard.html");
+
   await browser.close();
 })();

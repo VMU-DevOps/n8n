@@ -1,16 +1,15 @@
-version: '3.8'
 services:
   captcha-login:
     build:
       context: ./captcha-login
     ports:
       - "15000:5000"
-    depends_on:
-      - ocr-service-easyocr
-      - ocr-service-paddleocr
     volumes:
       - ./captcha-login/export:/app/export
     restart: always
+    depends_on:
+      - ocr-service-easyocr
+      - ocr-service-paddleocr
 
   ocr-service-easyocr:
     build:
@@ -20,8 +19,8 @@ services:
     restart: always
 
   ocr-service-paddleocr:
-    image: paddlepaddle/paddleocr:latest
-    command: hub serving start -m ocr_system
+    build:
+      context: ./ocr-service-paddleocr
     ports:
-      - "8866:8866"
+      - "6000:6000"
     restart: always

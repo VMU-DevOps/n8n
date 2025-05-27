@@ -7,15 +7,25 @@
     async function detectCaptcha() {
       const res = await fetch("/captcha");
       const data = await res.json();
+
+      document.getElementById("captcha").value = data.captcha_code || "";
+      document.getElementById("captcha_code").value = data.captcha_code || "";
+
+      if (data.original_image) {
+        document.getElementById("originalImg").src = "data:image/png;base64," + data.original_image;
+        document.getElementById("originalImg").style.display = "block";
+      }
+
       if (data.image) {
         document.getElementById("captchaImg").src = "data:image/png;base64," + data.image;
-        document.getElementById("captcha").value = data.captcha_code || "";
-        document.getElementById("captcha_code").value = data.captcha_code || "";
+        document.getElementById("captchaImg").style.display = "block";
       }
+
       if (data.screenshot) {
         document.getElementById("fullScreenshot").src = "data:image/png;base64," + data.screenshot;
         document.getElementById("fullScreenshot").style.display = "block";
       }
+
       document.getElementById("result").textContent = "✅ Mã captcha nhận diện: " + (data.captcha_code || "Không nhận được");
     }
 
@@ -26,7 +36,10 @@
   <h2>Nhận diện Captcha GDT</h2>
   <form onsubmit="event.preventDefault();">
     <input type="text" id="captcha" placeholder="Mã captcha (đã nhận dạng)" readonly /><br/>
-    <img id="captchaImg" alt="Captcha" /><br/>
+    <p>Ảnh gốc:</p>
+    <img id="originalImg" style="display:none; border:1px solid #888; max-width:150px;" /><br/>
+    <p>Ảnh đã xử lý (gửi OCR):</p>
+    <img id="captchaImg" style="display:none; border:1px solid #444; max-width:150px;" /><br/>
     <input type="hidden" id="captcha_code" />
     <button type="button" onclick="detectCaptcha()">📸 Nhận diện Captcha</button><br/><br/>
   </form>

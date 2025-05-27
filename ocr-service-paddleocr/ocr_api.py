@@ -2,13 +2,13 @@ from flask import Flask, request, jsonify
 import base64
 import io
 from PIL import Image
-import easyocr
+from paddleocr import PaddleOCR
 
 app = Flask(__name__)
-reader = easyocr.Reader(['en'], gpu=False)
+ocr = PaddleOCR(use_angle_cls=True, lang="ch")
 
 @app.route("/ocr", methods=["POST"])
-def ocr():
+def ocr_endpoint():
     data = request.json
     img_data = data.get("image_base64", "")
     if not img_data:
@@ -16,8 +16,8 @@ def ocr():
 
     try:
         image = Image.open(io.BytesIO(base64.b64decode(img_data))).convert("RGB")
-        result = reader.readtext(image)
-        text = " ".join([x[1] for x in result]).strip()
+        result = ocr.ocr(image, cls=True)
+        text = " ".join([line[1][0] for line in result[0]]).strip()
         return jsonify({"captcha_code": text})
     except Exception as e:
         return jsonify({"error": str(e)}), 500

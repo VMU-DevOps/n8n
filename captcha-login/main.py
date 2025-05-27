@@ -35,7 +35,6 @@ def get_captcha():
         img_base64 = base64.b64encode(captcha_bytes).decode("utf-8")
         full_base64 = base64.b64encode(full_bytes).decode("utf-8")
 
-        # Gửi ảnh sang OCR API
         ocr_response = requests.post("http://ocr-service:6000/ocr", json={"image_base64": img_base64})
         ocr_code = ocr_response.json().get("captcha_code", "")
 

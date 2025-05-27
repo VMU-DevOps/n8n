@@ -2,48 +2,35 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <title>Nhận diện Captcha GDT</title>
+  <title>Captcha GDT OCR So Sánh</title>
   <script>
     async function detectCaptcha() {
       const res = await fetch("/captcha");
       const data = await res.json();
 
-      document.getElementById("captcha").value = data.captcha_code || "";
-      document.getElementById("captcha_code").value = data.captcha_code || "";
+      document.getElementById("captcha_easy").value = data.captcha_easyocr || "";
+      document.getElementById("captcha_paddle").value = data.captcha_paddleocr || "";
 
-      if (data.original_image) {
-        document.getElementById("originalImg").src = "data:image/png;base64," + data.original_image;
-        document.getElementById("originalImg").style.display = "block";
-      }
-
-      if (data.image) {
-        document.getElementById("captchaImg").src = "data:image/png;base64," + data.image;
-        document.getElementById("captchaImg").style.display = "block";
-      }
-
-      if (data.screenshot) {
-        document.getElementById("fullScreenshot").src = "data:image/png;base64," + data.screenshot;
-        document.getElementById("fullScreenshot").style.display = "block";
-      }
-
-      document.getElementById("result").textContent = "✅ Mã captcha nhận diện: " + (data.captcha_code || "Không nhận được");
+      document.getElementById("originalImg").src = "data:image/png;base64," + data.original_image;
+      document.getElementById("processedImg").src = "data:image/png;base64," + data.image;
+      document.getElementById("fullScreenshot").src = "data:image/png;base64," + data.screenshot;
     }
 
     window.onload = detectCaptcha;
   </script>
 </head>
 <body>
-  <h2>Nhận diện Captcha GDT</h2>
-  <form onsubmit="event.preventDefault();">
-    <input type="text" id="captcha" placeholder="Mã captcha (đã nhận dạng)" readonly /><br/>
-    <p>Ảnh gốc:</p>
-    <img id="originalImg" style="display:none; border:1px solid #888; max-width:150px;" /><br/>
-    <p>Ảnh đã xử lý (gửi OCR):</p>
-    <img id="captchaImg" style="display:none; border:1px solid #444; max-width:150px;" /><br/>
-    <input type="hidden" id="captcha_code" />
-    <button type="button" onclick="detectCaptcha()">📸 Nhận diện Captcha</button><br/><br/>
-  </form>
-  <p id="result"></p>
-  <img id="fullScreenshot" style="display:none; max-width:100%; border:1px solid #ccc; margin-top:20px;" />
+  <h2>So sánh nhận diện Captcha GDT</h2>
+  <p>EasyOCR:</p>
+  <input id="captcha_easy" readonly><br/>
+  <p>PaddleOCR:</p>
+  <input id="captcha_paddle" readonly><br/>
+  <button onclick="detectCaptcha()">📸 Lấy Captcha mới</button><br/><br/>
+  <p>Ảnh gốc:</p>
+  <img id="originalImg" style="max-width:150px;"><br/>
+  <p>Ảnh đã xử lý:</p>
+  <img id="processedImg" style="max-width:150px;"><br/>
+  <p>Toàn bộ giao diện:</p>
+  <img id="fullScreenshot" style="max-width:100%;">
 </body>
 </html>

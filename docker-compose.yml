@@ -6,12 +6,22 @@ services:
     ports:
       - "15000:5000"
     depends_on:
-      - ocr-service
+      - ocr-service-easyocr
+      - ocr-service-paddleocr
+    volumes:
+      - ./captcha-login/export:/app/export
     restart: always
 
-  ocr-service:
+  ocr-service-easyocr:
     build:
-      context: ./ocr-service
+      context: ./ocr-service-easyocr
     ports:
       - "16000:6000"
+    restart: always
+
+  ocr-service-paddleocr:
+    image: paddlepaddle/paddleocr:latest
+    command: hub serving start -m ocr_system
+    ports:
+      - "8866:8866"
     restart: always

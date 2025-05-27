@@ -5,6 +5,7 @@ from PIL import Image, ImageFilter, ImageOps
 import base64
 import io
 import requests
+from datetime import datetime
 
 app = Flask(__name__, static_folder="static")
 
@@ -19,7 +20,6 @@ def get_captcha():
         page = browser.new_page()
         page.goto("https://hoadondientu.gdt.gov.vn/", timeout=60000)
         page.wait_for_timeout(3000)
-
         page.mouse.click(100, 100)
         page.wait_for_timeout(1000)
         login_button = page.query_selector("text=Đăng nhập")
@@ -35,13 +35,12 @@ def get_captcha():
         captcha_bytes = captcha_img.screenshot()
         full_bytes = page.screenshot(full_page=True)
 
-        # Ảnh gốc base64
         original_base64 = base64.b64encode(captcha_bytes).decode("utf-8")
 
-        # Tiền xử lý ảnh
         image = Image.open(io.BytesIO(captcha_bytes)).convert("L")
         image = ImageOps.invert(image)
-        image = image.filter(ImageFilter.SHARPEN)
+        image = image.filter(ImageFilter.MedianFilter(size=3))
+        image = image.point(lambda x: 0 if x < 128 else 255, '1')
 
         buffer = io.BytesIO()
         image.save(buffer, format="PNG")
@@ -49,15 +48,27 @@ def get_captcha():
         processed_base64 = base64.b64encode(processed_bytes).decode("utf-8")
         full_base64 = base64.b64encode(full_bytes).decode("utf-8")
 
-        ocr_response = requests.post("http://ocr-service:6000/ocr", json={"image_base64": processed_base64})
-        ocr_code = ocr_response.json().get("captcha_code", "")
+        # Export to local file for dataset
+        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+        image.save(f"export/{ts}_processed.png")
+
+        # EasyOCR
+        easyocr_resp = requests.post("http://ocr-service-easyocr:6000/ocr", json={"image_base64": processed_base64})
+        easy_text = easyocr_resp.json().get("captcha_code", "")
+
+        # PaddleOCR
+        paddle_resp = requests.post("http://ocr-service-paddleocr/predict/ocr_system", json={"images": [processed_base64]})
+        paddle_result = paddle_resp.json()[0]["data"]
+        paddle_text = " ".join([item[1][0] for item in paddle_result]) if paddle_result else ""
 
         return jsonify({
             "original_image": original_base64,
             "image": processed_base64,
-            "captcha_code": ocr_code,
+            "captcha_easyocr": easy_text,
+            "captcha_paddleocr": paddle_text,
             "screenshot": full_base64
         })
 
 if __name__ == "__main__":
+    os.makedirs("export", exist_ok=True)
     app.run(host="0.0.0.0", port=5000)

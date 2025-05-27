@@ -2,35 +2,35 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <title>Captcha GDT OCR So Sánh</title>
+  <title>Captcha GDT - Thu thập dữ liệu</title>
   <script>
     async function detectCaptcha() {
       const res = await fetch("/captcha");
       const data = await res.json();
-
-      document.getElementById("captcha_easy").value = data.captcha_easyocr || "";
-      document.getElementById("captcha_paddle").value = data.captcha_paddleocr || "";
-
+      document.getElementById("captcha_easy").value = data.captcha_code || "";
       document.getElementById("originalImg").src = "data:image/png;base64," + data.original_image;
       document.getElementById("processedImg").src = "data:image/png;base64," + data.image;
       document.getElementById("fullScreenshot").src = "data:image/png;base64," + data.screenshot;
     }
-
     window.onload = detectCaptcha;
   </script>
 </head>
 <body>
-  <h2>So sánh nhận diện Captcha GDT</h2>
-  <p>EasyOCR:</p>
+  <h2>GDT Captcha OCR (Thu thập & Xuất dữ liệu)</h2>
+  <label>OCR (EasyOCR):</label><br/>
   <input id="captcha_easy" readonly><br/>
-  <p>PaddleOCR:</p>
-  <input id="captcha_paddle" readonly><br/>
-  <button onclick="detectCaptcha()">📸 Lấy Captcha mới</button><br/><br/>
+  <button onclick="detectCaptcha()">📸 Nhận Captcha</button><br/><br/>
   <p>Ảnh gốc:</p>
   <img id="originalImg" style="max-width:150px;"><br/>
   <p>Ảnh đã xử lý:</p>
   <img id="processedImg" style="max-width:150px;"><br/>
   <p>Toàn bộ giao diện:</p>
-  <img id="fullScreenshot" style="max-width:100%;">
+  <img id="fullScreenshot" style="max-width:100%;"><br/><br/>
+
+  <h3>Tải dữ liệu đã thu thập</h3>
+  <ul>
+    <li><a href="/download/labels.csv" target="_blank">📄 labels.csv</a></li>
+    <li><a href="/download/labels.csv" download>⬇️ Tải nhãn (CSV)</a></li>
+  </ul>
 </body>
 </html>

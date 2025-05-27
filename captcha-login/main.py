@@ -1,74 +1,49 @@
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory, render_template_string, redirect
 import os
-from playwright.sync_api import sync_playwright
-from PIL import Image, ImageFilter, ImageOps
-import base64
-import io
-import requests
-from datetime import datetime
+import csv
 
-app = Flask(__name__, static_folder="static")
+app = Flask(__name__)
+EXPORT_FOLDER = "export"
+LABEL_FILE = os.path.join(EXPORT_FOLDER, "labels.csv")
+os.makedirs(EXPORT_FOLDER, exist_ok=True)
 
 @app.route("/")
 def index():
-    return send_from_directory(app.static_folder, "index.html")
+    return send_from_directory("static", "index.html")
 
-@app.route("/captcha")
-def get_captcha():
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
-        page = browser.new_page()
-        page.goto("https://hoadondientu.gdt.gov.vn/", timeout=60000)
-        page.wait_for_timeout(3000)
-        page.mouse.click(100, 100)
-        page.wait_for_timeout(1000)
-        login_button = page.query_selector("text=Đăng nhập")
-        if login_button:
-            login_button.click()
-        page.wait_for_selector("div.ant-modal-content", timeout=5000)
+@app.route("/edit-labels")
+def edit_labels():
+    rows_html = ""
+    if os.path.exists(LABEL_FILE):
+        with open(LABEL_FILE, newline="") as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                img_path = f"/download/{row['filename']}"
+                rows_html += f'''
+                <tr>
+                    <td><img src="{img_path}"></td>
+                    <td>{row['filename']}<input type="hidden" name="filename" value="{row['filename']}"></td>
+                    <td>{row['text']}</td>
+                    <td><input name="text" value="{row['text']}" maxlength="8"></td>
+                </tr>
+                '''
+    return render_template_string(open("static/edit.html").read(), rows=rows_html)
 
-        login_modal = page.query_selector("div.ant-modal-content")
-        captcha_img = login_modal.query_selector("img[alt='captcha']")
-        if not captcha_img:
-            return jsonify({"error": "Không tìm thấy captcha trong modal"}), 500
+@app.route("/update-labels", methods=["POST"])
+def update_labels():
+    filenames = request.form.getlist("filename")
+    texts = request.form.getlist("text")
 
-        captcha_bytes = captcha_img.screenshot()
-        full_bytes = page.screenshot(full_page=True)
+    with open(LABEL_FILE, "w", newline="") as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(["filename", "text"])
+        for f, t in zip(filenames, texts):
+            writer.writerow([f, t])
+    return redirect("/edit-labels")
 
-        original_base64 = base64.b64encode(captcha_bytes).decode("utf-8")
-
-        image = Image.open(io.BytesIO(captcha_bytes)).convert("L")
-        image = ImageOps.invert(image)
-        image = image.filter(ImageFilter.MedianFilter(size=3))
-        image = image.point(lambda x: 0 if x < 128 else 255, '1')
-
-        buffer = io.BytesIO()
-        image.save(buffer, format="PNG")
-        processed_bytes = buffer.getvalue()
-        processed_base64 = base64.b64encode(processed_bytes).decode("utf-8")
-        full_base64 = base64.b64encode(full_bytes).decode("utf-8")
-
-        # Export to local file for dataset
-        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-        image.save(f"export/{ts}_processed.png")
-
-        # EasyOCR
-        easyocr_resp = requests.post("http://ocr-service-easyocr:6000/ocr", json={"image_base64": processed_base64})
-        easy_text = easyocr_resp.json().get("captcha_code", "")
-
-        # PaddleOCR
-        paddle_resp = requests.post("http://ocr-service-paddleocr/predict/ocr_system", json={"images": [processed_base64]})
-        paddle_result = paddle_resp.json()[0]["data"]
-        paddle_text = " ".join([item[1][0] for item in paddle_result]) if paddle_result else ""
-
-        return jsonify({
-            "original_image": original_base64,
-            "image": processed_base64,
-            "captcha_easyocr": easy_text,
-            "captcha_paddleocr": paddle_text,
-            "screenshot": full_base64
-        })
+@app.route("/download/<path:filename>")
+def download_file(filename):
+    return send_from_directory(EXPORT_FOLDER, filename, as_attachment=False)
 
 if __name__ == "__main__":
-    os.makedirs("export", exist_ok=True)
     app.run(host="0.0.0.0", port=5000)

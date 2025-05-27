@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Chỉnh sửa nhãn Captcha</title>
+  <style>
+    table, th, td { border: 1px solid #ccc; border-collapse: collapse; padding: 6px; }
+    th { background-color: #eee; }
+    img { max-height: 40px; }
+  </style>
+</head>
+<body>
+  <h2>Chỉnh sửa nhãn Captcha (labels.csv)</h2>
+  <form method="POST" action="/update-labels">
+    <table>
+      <thead>
+        <tr><th>Ảnh</th><th>Tên file</th><th>Nhãn hiện tại</th><th>Chỉnh sửa</th></tr>
+      </thead>
+      <tbody>
+        {{rows}}
+      </tbody>
+    </table>
+    <br>
+    <button type="submit">💾 Lưu chỉnh sửa</button>
+  </form>
+</body>
+</html>
